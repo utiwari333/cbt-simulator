@@ -1,0 +1,328 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>NEC CBT Simulator</title>
+
+<style>
+body{font-family:Arial;margin:20px}
+
+/* Top bar for timer + attempt count */
+#topBar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:20px;
+margin-bottom:20px;
+padding:0 40px;
+}
+
+#timer{
+font-size:48px;
+}
+
+#attemptBox{
+font-size:24px;
+font-weight:bold;
+}
+
+.default{background:gray;color:white}
+.answered{background:green;color:white}
+.unanswered{background:red;color:white}
+.marked{background:yellow;color:black}
+
+#palette{
+margin-top:20px;
+margin-bottom:40px;
+text-align:center;
+}
+
+#palette button{
+    width:2vw;
+    height:2vw;
+    font-size:0.75vw;
+}
+
+#examArea{margin-top:20px;margin-bottom:120px;}
+
+#controls button{
+padding:18px 28px;
+font-size:20px;
+margin:8px;
+}
+
+#controls {
+position: fixed;
+bottom: 20px;
+left: 50%;
+transform: translateX(-50%);
+text-align:center;
+background:white;
+padding:10px;
+}
+
+h2{
+text-align:center;
+}
+
+h1{
+text-align:center;
+}
+
+
+#question{
+    font-size:28px;
+    font-weight:500;
+}
+
+#options{
+    font-size:22px;
+}
+
+#options label{
+    margin:10px 0;
+}
+
+#resultArea{
+    font-size:22px;
+    line-height:1.6;
+}
+
+#resultArea b{
+    font-size:24px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>NEC Mechanical CBT Simulator</h2>
+<h1>Sample Questions by NEC</h1>
+
+<!-- ✅ FIX: Timer + Attempt count in same row -->
+<div id="topBar">
+    <div id="timer"></div>
+    <div id="attemptBox">
+        Attempted: <span id="count">0</span>/100
+    </div>
+</div>
+
+<div id="palette"></div>
+
+<div id="examArea">
+<div id="question"></div>
+<div id="options"></div>
+</div>
+
+<div id="controls">
+<button onclick="prev()">Previous</button>
+<button onclick="next()">Next</button>
+<button onclick="mark()">Mark Review</button>
+<button onclick="submitExam()">Submit</button>
+</div>
+
+<div id="resultArea" style="display:none"></div>
+
+<script>
+
+var fullQuestions = [{"topic": "Section 1", "q": "Which is not the common type of fit in hole and shaft?", "o": ["A) Clearance fit", "B) Transference fit", "C) Transition fit", "D) Interference fit"], "a": "B) Transference fit"}, {"topic": "Section 1", "q": "Steel containing 0.15% - 0.45% carbon is called \u2026\u2026\u2026..", "o": ["A) Mild steel", "B) Dead mild steel", "C) Medium carbon steel", "D) High carbon steel"], "a": "A) Mild steel"}, {"topic": "Section 1", "q": "Wrought iron contains ............................... of iron", "o": ["A) 0.0999%", "B) 0.999%", "C) 9.99%", "D) 99.9%"], "a": "D) 99.9%"}, {"topic": "Section 1", "q": "The C.G.S. unit of charge is \u2026\u2026\u2026\u2026..", "o": ["A) Coulomb", "B) Erg", "C) Franklin", "D) Biot"], "a": "C) Franklin"}, {"topic": "Section 1", "q": "The temperature of heat produced by the electric arc is of the order of \u2026\u2026\u2026\u2026.", "o": ["A) 6 C\u030a \u2013 7 C\u030a", "B) 60 C\u030a \u2013 70 C\u030a", "C) 600 C\u030a \u2013 700 C\u030a", "D) 6000 C\u030a \u2013 7000 C\u030a"], "a": "D) 6000 C\u030a \u2013 7000 C\u030a"}, {"topic": "Section 1", "q": "The type of organization preferred for a steel industry is \u2026\u2026\u2026.", "o": ["A) Line and staff", "B) Functional", "C) Line, staff and functional", "D) Line"], "a": "A) Line and staff"}, {"topic": "Section 1", "q": "The measurement of a thermodynamic property \u2018temperature\u2019 is based on \u2026\u2026\u2026\u2026\u2026 thermodynamic law", "o": ["A) Zeroth law", "B) First law", "C) Second law", "D) Kelvin-plank law"], "a": "A) Zeroth law"}, {"topic": "Section 1", "q": "Steady state flow application device is \u2026\u2026\u2026.", "o": ["A) Filling-in of gas cylinder", "B) Throttling valve", "C) Filling-out of gas cylinder", "D) Compressor"], "a": "B) Throttling valve"}, {"topic": "Section 1", "q": "Entropy of water at 0\u030a C is assumed to be \u2026\u2026\u2026\u2026\u2026", "o": ["A) 1", "B) 0", "C) -1", "D) 10"], "a": "B) 0"}, {"topic": "Section 1", "q": "Otto cycle is also known as \u2026\u2026\u2026\u2026.", "o": ["A) Constant pressure cycle", "B) Constant temperature cycle", "C) Constant volume cycle", "D) Constant enthalpy cycle"], "a": "C) Constant volume cycle"}, {"topic": "Section 1", "q": "The inlet valve of a four-stroke cycle petrol engine remains open for \u2026\u2026\u2026\u2026..", "o": ["A) 30\u030a", "B) 130\u030a", "C) 230\u030a", "D) 300"], "a": "C) 230\u030a"}, {"topic": "Section 1", "q": "A refrigerant with the highest critical pressure is \u2026\u2026\u2026\u2026", "o": ["A) R-11", "B) R-12", "C) R-22", "D) Ammonia"], "a": "D) Ammonia"}, {"topic": "Section 1", "q": "Water pressure at any point is measured with the unit \u2026\u2026\u2026\u2026.", "o": ["A) Bar", "B) Newton", "C) Cusecs", "D) kg"], "a": "A) Bar"}, {"topic": "Section 1", "q": "The upper surface of weir over which water flows is known as \u2026\u2026\u2026\u2026.", "o": ["A) Crest", "B) Nappe", "C) Sill", "D) Weir-top"], "a": "A) Crest"}, {"topic": "Section 1", "q": "Bernoulli\u2019s theorem deals with the conservation of \u2026\u2026\u2026\u2026\u2026.", "o": ["A) Mass", "B) Force", "C) Momentum", "D) Energy"], "a": "D) Energy"}, {"topic": "Section 1", "q": "Which of the following pipe bends will introduce maximum head loss \u2026\u2026\u2026\u2026\u2026..", "o": ["A) 30\u00b0 bend", "B) U bend", "C) 45\u00b0 bend", "D) 90\u00b0 bend"], "a": "B) U bend"}, {"topic": "Section 1", "q": "Most commonly used hydro turbine in Nepal is \u2026\u2026\u2026\u2026.", "o": ["A) Pelton", "B) Francis", "C) Kaplan", "D) Turgo-impulse"], "a": "A) Pelton"}, {"topic": "Section 1", "q": "One horse power of pump is equal to \u2026\u2026\u2026\u2026\u2026\u2026.", "o": ["A) 75 watt", "B) 102 watt", "C) 550 watt", "D) 746 watt"], "a": "D) 746 watt"}, {"topic": "Section 1", "q": "The total momentum of a system of masses (i.e. moving bodies) in any direction remains constant, unless acted upon by an external force in that direction. This statement is called \u2026\u2026\u2026\u2026\u2026", "o": ["A) Newton\u2019s first law of motion", "B) Newton\u2019s second law of motion", "C) Principle of conservation of energy", "D) Principle of conservation of momentum"], "a": "D) Principle of conservation of momentum"}, {"topic": "Section 1", "q": "Hook\u2019s law holds good up to \u2026\u2026\u2026\u2026", "o": ["A) Elastic limit", "B) Yield point", "C) Plastic limit", "D) Breaking point"], "a": "A) Elastic limit"}, {"topic": "Section 1", "q": "The unit of moment of inertia of an area is \u2026\u2026\u2026\u2026", "o": ["A) kg m2", "B) m4", "C) kg/m2", "D) kg/m4"], "a": "B) m4"}, {"topic": "Section 1", "q": "In a reciprocating steam engine, which of the following forms a kinematic link?", "o": ["A) Cylinder and piston", "B) Piston rod and connecting rod", "C) Crankshaft and flywheel", "D) Flywheel and engine frame"], "a": "D) Flywheel and engine frame"}, {"topic": "Section 1", "q": "In simple harmonic motion (S.H.M.), the ratio of acceleration and displacement is proportional to \u2026\u2026\u2026", "o": ["A) \ud835\udf14", "B) \ud835\udf142", "C) 1/\ud835\udf142", "D) \u221a\u03c9"], "a": "B) \ud835\udf142"}, {"topic": "Section 1", "q": "The distribution of torsion shear stress is uniform in ............... section.", "o": ["A) Parallel", "B) Rectangular", "C) Trapezoidal", "D) Circular"], "a": "D) Circular"}, {"topic": "Section 1", "q": "Casting process is preferred for parts having \u2026\u2026\u2026", "o": ["A) Many details", "B) A few details", "C) No details", "D) Non-symmetrical shape"], "a": "A) Many details"}, {"topic": "Section 1", "q": "The heat treatment process used for softening hardened steel is \u2026\u2026\u2026\u2026\u2026", "o": ["A) Carburizing", "B) Normalizing", "C) Annealing", "D) Tempering"], "a": "C) Annealing"}, {"topic": "Section 1", "q": "Which of the following process is used to convert larger sections, such as ingots into smaller sections?", "o": ["A) Hot rolling", "B) Hot forging", "C) Squeezing", "D) Hot extrusion"], "a": "A) Hot rolling"}, {"topic": "Section 1", "q": "The process of improving the cutting action of the grinding wheel is called \u2026\u2026\u2026\u2026", "o": ["A) Truing", "B) Dressing", "C) Facing", "D) Clearing"], "a": "B) Dressing"}, {"topic": "Section 1", "q": "The commonly used flux for brazing is \u2026\u2026\u2026\u2026\u2026.", "o": ["A) Resin", "B) Soft iron", "C) Borax", "D) Soft silver"], "a": "C) Borax"}, {"topic": "Section 1", "q": "What is the full form of CNC in manufacturing?", "o": ["A) Computer Number Control", "B) Computer Network Control", "C) Computer Numerical Control", "D) Computer Neural Control"], "a": "C) Computer Numerical Control"}, {"topic": "Section 1", "q": "ISO certification is needed for \u2026\u2026\u2026\u2026", "o": ["A) Quality control", "B) Profit making", "C) Formalities", "D) Mass production"], "a": "A) Quality control"}, {"topic": "Section 1", "q": "Which of the following component is not the mechanical power transmission system?", "o": ["A) Brakes", "B) Gears", "C) Belt", "D) Shaft"], "a": "A) Brakes"}, {"topic": "Section 1", "q": "The function of lubrication in mechanical system is \u2026\u2026\u2026\u2026\u2026", "o": ["A) Cooling", "B) Increase wear and tear", "C) Increase oxidation and corrosion", "D) Heating"], "a": "A) Cooling"}, {"topic": "Section 1", "q": "In a V-belt drive, belt touches \u2026\u2026\u2026\u2026", "o": ["A) At bottom", "B) At sides only", "C) At bottom and sides", "D) Could touch anywhere"], "a": "B) At sides only"}, {"topic": "Section 1", "q": "Which is not the basic type of vibration \u2026\u2026\u2026\u2026", "o": ["A) Longitudinal", "B) Vertical", "C) Transverse", "D) Tortional"], "a": "B) Vertical"}, {"topic": "Section 1", "q": "Which of these is not a characteristic of brainstorming?", "o": ["A) There is a time limit", "B) Ideas are critically evaluated", "C) Quantity of ideas is foremost", "D) Creativity overrides practicality"], "a": "B) Ideas are critically evaluated"}, {"topic": "Section 1", "q": "A systematic approach for maintenance is \u2026\u2026\u2026\u2026\u2026.", "o": ["A) Problem- cause-diagnosis -rectification", "B) Problem-diagnosis -cause-rectification", "C) Problem-measure-diagnosis-rectification", "D) Problem-diagnosis-measure-rectification"], "a": "B) Problem-diagnosis -cause-rectification"}, {"topic": "Section 1", "q": "Which Act in Nepal covers more provisions regarding occupational safety and health?", "o": ["A) Labour Act", "B) Electricity Act", "C) Environment Act", "D) Transport management Act"], "a": "A) Labour Act"}, {"topic": "Section 1", "q": "The following is not the classification of maintenance.", "o": ["A) Corrective maintenance", "B) Timely maintenance", "C) Condition monitoring", "D) Scheduled maintenance"], "a": "B) Timely maintenance"}, {"topic": "Section 1", "q": "The reliability of the entire system is called \u2026\u2026\u2026\u2026_", "o": ["A) Partial reliability", "B) Isolated reliability", "C) Closed reliability", "D) System reliability"], "a": "D) System reliability"}, {"topic": "Section 1", "q": "What is the main objective of risk assessment?", "o": ["A) To evaluate hazard and minimize risks", "B) Remediation of contaminated sites", "C) Hazard management", "D) To know source of pollutants"], "a": "A) To evaluate hazard and minimize risks"}, {"topic": "Section 1", "q": "What does \u201cNDT\u201d stand for, in case of diagnosis of welding defects?", "o": ["A) Non-driving test", "B) Non-destructive test", "C) Non-dry test", "D) Non-dial test"], "a": "B) Non-destructive test"}, {"topic": "Section 1", "q": "Which of the following can\u2019t fall under the head-controllable errors?", "o": ["A) Calibration errors", "B) Environmental errors", "C) Avoidable errors", "D) Random errors"], "a": "D) Random errors"}, {"topic": "Section 1", "q": "A device for determining the value or magnitude of a quantity or variable is called as \u2026..", "o": ["A) Sensor", "B) Transducer", "C) Indicator", "D) Instrument"], "a": "D) Instrument"}, {"topic": "Section 1", "q": "Dynamometers are the devices that measures", "o": ["A) Displacement", "B) Pressure", "C) Flow", "D) Power"], "a": "D) Power"}, {"topic": "Section 1", "q": "Which of the following industries should be located near the vicinity of raw materials?", "o": ["A) Cycles", "B) Televisions", "C) Sewing machines", "D) Steel mills"], "a": "D) Steel mills"}, {"topic": "Section 1", "q": "In inventory control theory, the economic order quantity is \u2026\u2026\u2026\u2026.", "o": ["A) Average level of inventory", "B) Optimum lot size", "C) Capacity of warehouse", "D) Lot size corresponding to break-even analysis"], "a": "B) Optimum lot size"}, {"topic": "Section 1", "q": "The brake power is the power available \u2026\u2026\u2026", "o": ["A) In engine cylinder", "B) At crank pin", "C) At crank shaft", "D) At connecting rod"], "a": "C) At crank shaft"}, {"topic": "Section 1", "q": "The overall heat transfer coefficient is used in the problems of \u2026\u2026\u2026\u2026", "o": ["A) Conduction only", "B) Convection only", "C) Radiation only", "D) Conduction and convection"], "a": "D) Conduction and convection"}, {"topic": "Section 1", "q": "The heat flow and temperature distribution throughout the fins is ................ time.", "o": ["A) Independent of", "B) Directly proportional to", "C) Square proportional to", "D) Inversely proportional to"], "a": "A) Independent of"}, {"topic": "Section 1", "q": "Photovoltaic energy is the conversion of sunlight into \u2026\u2026\u2026..", "o": ["A) Chemical energy", "B) Biogas", "C) Electricity", "D) Geothermal energy"], "a": "C) Electricity"}, {"topic": "Section 1", "q": "Which of the following is major exhaust emissions from Diesel Engine compared to Petrol Engine?", "o": ["A) Oxides of nitrogen", "B) Particulates", "C) CO and CO2", "D) Unburnt hydrocarbon"], "a": "B) Particulates"}, {"topic": "Section 1", "q": "Which of the following oil is more viscous?", "o": ["A) SAE 40", "B) SAE 30", "C) SAE 80", "D) SAE70"], "a": "C) SAE 80"}, {"topic": "Section 1", "q": "Which of the following is called the secondary air pollutant?", "o": ["A) Ethylene", "B) Ozone", "C) Carbon monoxide", "D) Nitrogen dioxide"], "a": "B) Ozone"}, {"topic": "Section 1", "q": "Standard dimensions (mm x mm) of A3 drawing sheet is", "o": ["A) 11.69 \u00d7 16.54", "B) 29.7 \u00d7 42", "C) 297 \u00d7 420", "D) 420 \u00d7 280"], "a": "C) 297 \u00d7 420"}, {"topic": "Section 1", "q": "Which of the following methods of charging depreciation of an asset has increased amount of depreciation as the age of asset increases", "o": ["A) Sum-of-year digit", "B) Sinking fund", "C) Diminishing balance", "D) Straight line"], "a": "B) Sinking fund"}, {"topic": "Section 1", "q": "The process of optimizing the project\u2019s limited resources without extending the project duration is known as", "o": ["A) Project crashing", "B) Resource levelling", "C) Resource smoothing", "D) Networking"], "a": "C) Resource smoothing"}, {"topic": "Section 1", "q": "The process of composing/raising the required fund from different sources such as equity, preferred stock, bond and debenture is known as", "o": ["A) Capital structure planning", "B) Project financing", "C) Capital budgeting decision", "D) Deducing earning per share"], "a": "A) Capital structure planning"}, {"topic": "Section 1", "q": "In which of the following society, people used to seek their existence on growing plants for their cattle and domestic animals", "o": ["A) Pastoral society", "B) Tribal society", "C) Horticultural society", "D) Agricultural society"], "a": "A) Pastoral society"}, {"topic": "Section 1", "q": "According to Nepal Engineering Council Act, 2055 (Revised, 2079), all engineering academic institutions shall be ................................... in the Council.", "o": ["A) Affiliated", "B) United", "C) Recognized", "D) Associated"], "a": "C) Recognized"}, {"topic": "Section 1", "q": "Which of the following is not an effective method to control corrosion?", "o": ["A) Cathodic protection", "B) Use of corrosion-resistant alloys", "C) Application of protective coatings", "D) Increasing humidity and temperature"], "a": "D) Increasing humidity and temperature"}, {"topic": "Section 1", "q": "Which of the following quantities represents the rate of flow of electric charge?", "o": ["A) Voltage", "B) Current", "C) Resistance", "D) Power"], "a": "B) Current"}, {"topic": "Section 1", "q": "In a shaper machine, the cutting action takes place during:", "o": ["A) The return stroke of the ram", "B) Both forward and return strokes", "C) The forward stroke of the ram", "D) Only during tool setup"], "a": "C) The forward stroke of the ram"}, {"topic": "Section 1", "q": "Motivation that comes from internal satisfaction, personal growth, or achievement is called:", "o": ["A) Extrinsic motivation", "B) Intrinsic motivation", "C) Coercive motivation", "D) External reinforcement"], "a": "B) Intrinsic motivation"}, {"topic": "Section 1", "q": "The pitch of a screw thread is defined as:", "o": ["A) The distance between two consecutive crests or roots measured parallel to the axis", "B) The angle between the flanks of the thread", "C) The height of the thread from root to crest", "D) The diameter at which the thread thickness equals the space between threads"], "a": "A) The distance between two consecutive crests or roots measured parallel to the axis"}, {"topic": "Section 1", "q": "A closed system in thermodynamics is one in which:", "o": ["A) Both mass and energy can cross the system boundary", "B) Only mass can cross the system boundary", "C) Only energy can cross the system boundary", "D) Neither mass nor energy can cross the system boundary"], "a": "C) Only energy can cross the system boundary"}, {"topic": "Section 1", "q": "The Clausius statement of the Second Law of Thermodynamics says that::", "o": ["A) No heat engine can be 100% efficient", "B) Heat cannot of itself flow from a colder body to a hotter body", "C) All reversible engines have equal efficiency", "D) Energy can neither be created nor destroyed"], "a": "B) Heat cannot of itself flow from a colder body to a hotter body"}, {"topic": "Section 1", "q": "The camshaft in an engine is responsible for:", "o": ["A) Controlling the timing of valve opening and closing", "B) Driving the crankshaft", "C) Maintaining engine temperature", "D) Compressing the air\u2013fuel mixture"], "a": "A) Controlling the timing of valve opening and closing"}, {"topic": "Section 1", "q": "Which of the following is a desirable property of a refrigerant?", "o": ["A) High boiling point and high toxicity", "B) High latent heat of vaporization and non-corrosiveness", "C) Low thermal conductivity and high density", "D) High ozone depletion potential"], "a": "B) High latent heat of vaporization and non-corrosiveness"}, {"topic": "Section 1", "q": "A Newtonian fluid is one in which:", "o": ["A) Shear stress is independent of shear rate", "B) Shear stress is directly proportional to the rate of shear strain", "C) Viscosity changes with temperature and pressure abruptly", "D) There is no viscous effect"], "a": "B) Shear stress is directly proportional to the rate of shear strain"}, {"topic": "Section 1", "q": "The Continuity Equation for a steady, incompressible flow is based on the law of:", "o": ["A) Law of conservation of mass", "B) Law of conservation of momentum", "C) Law of conservation of energy", "D) Newton\u2019s second law"], "a": "A) Law of conservation of mass"}, {"topic": "Section 1", "q": "The hydraulic efficiency of a turbine is defined as:", "o": ["A) Ratio of mechanical energy at the shaft to electrical output", "B) Ratio of power developed by the runner to the energy supplied by water at the inlet", "C) Ratio of input head to output head", "D) Ratio of total head to net head"], "a": "B) Ratio of power developed by the runner to the energy supplied by water at the inlet"}, {"topic": "Section 1", "q": "The performance curves of a pump show the relationship between:", "o": ["A) Head, discharge, and efficiency", "B) Temperature, viscosity, and flow rate", "C) Speed, torque, and power factor", "D) Pressure, density, and temperature"], "a": "A) Head, discharge, and efficiency"}, {"topic": "Section 1", "q": "For a body to be in static equilibrium, the following conditions must be satisfied:", "o": ["A) \u03a3F=0 and \u03a3M=0", "B) \u03a3F=0 only", "C) \u03a3M=0 only", "D) \u03a3F\u22600 and \u03a3M=0"], "a": "A) \u03a3F=0 and \u03a3M=0"}, {"topic": "Section 1", "q": "Thermal stress is developed in a material when:", "o": ["A) The material is freely expanding or contracting with temperature", "B) The temperature is constant throughout", "C) Expansion or contraction due to temperature is restrained", "D) The material is under pure shear stress"], "a": "C) Expansion or contraction due to temperature is restrained"}, {"topic": "Section 1", "q": "In a slider-crank mechanism, the link that transmits motion from the crank to the slider is called:", "o": ["A) Frame", "B) Coupling rod", "C) Connecting rod", "D) Follower"], "a": "C) Connecting rod"}, {"topic": "Section 1", "q": "Quenching is a process in which the heated metal is:", "o": ["A) Cooled slowly in the furnace", "B) Cooled rapidly in water, oil, or brine", "C) Heated again to a lower temperature", "D) Allowed to cool in air"], "a": "B) Cooled rapidly in water, oil, or brine"}, {"topic": "Section 1", "q": "In a milling machine, the cutting tool:", "o": ["A) Rotates while the workpiece remains stationary or moves linearly", "B) Remains stationary while the workpiece rotates", "C) Moves to and fro while the workpiece is fixed", "D) Cuts by grinding action"], "a": "A) Rotates while the workpiece remains stationary or moves linearly"}, {"topic": "Section 1", "q": "The major difference between soldering and brazing is that:", "o": ["A) Soldering uses a lower melting point filler metal than brazing", "B) Brazing is done at a lower temperature than soldering", "C) Soldering always requires flux, while brazing does not", "D) Brazing is used for electrical joints only"], "a": "A) Soldering uses a lower melting point filler metal than brazing"}, {"topic": "Section 1", "q": "Additive manufacturing (3D printing) differs from conventional machining because it:", "o": ["A) Removes material to create parts", "B) Builds parts layer by layer by adding material", "C) Requires no digital model", "D) Uses only metallic materials"], "a": "B) Builds parts layer by layer by adding material"}, {"topic": "Section 1", "q": "The main function of a clutch is to:", "o": ["A) Stop a rotating shaft instantly", "B) Connect and disconnect power between driving and driven shafts smoothly", "C) Transmit power continuously without control", "D) Increase torque output of an engine"], "a": "B) Connect and disconnect power between driving and driven shafts smoothly"}, {"topic": "Section 1", "q": "In an undamped free vibration, the amplitude of vibration:", "o": ["A) Decreases gradually with time", "B) Increases exponentially with time", "C) Remains constant with time", "D) Becomes zero immediately after one cycle"], "a": "C) Remains constant with time"}, {"topic": "Section 1", "q": "A mechanical engineering standard helps designers by:", "o": ["A) Eliminating the need for material selection", "B) Providing reference dimensions, tolerances, and safety factors for common components", "C) Forcing all products to be identical", "D) Allowing arbitrary assumptions in design"], "a": "B) Providing reference dimensions, tolerances, and safety factors for common components"}, {"topic": "Section 1", "q": "Galvanic corrosion occurs when:", "o": ["A) Two similar metals are exposed to dry air", "B) Two dissimilar metals are in electrical contact in the presence of an electrolyte", "C) Metal is exposed to high temperature", "D) The paint coating is too thick"], "a": "B) Two dissimilar metals are in electrical contact in the presence of an electrolyte"}, {"topic": "Section 1", "q": "Total Productive Maintenance (TPM) aims to:", "o": ["A) Involve only the maintenance department in machine care", "B) Achieve zero breakdowns and zero defects through operator participation", "C) Focus only on production efficiency", "D) Replace traditional preventive maintenance with breakdown repair"], "a": "B) Achieve zero breakdowns and zero defects through operator participation"}, {"topic": "Section 1", "q": "The need for maintenance arises mainly because of:", "o": ["A) Continuous wear and tear, corrosion, vibration, and aging of components", "B) Overdesign and underuse of machinery", "C) Perfect working conditions at all times", "D) Frequent equipment upgrades"], "a": "A) Continuous wear and tear, corrosion, vibration, and aging of components"}, {"topic": "Section 1", "q": "The Mean Time Between Failures (MTBF) of a system represents:", "o": ["A) The time taken to repair a component after failure", "B) The total operating time divided by the number of failures", "C) The maximum life span of a component", "D) The downtime of a system"], "a": "B) The total operating time divided by the number of failures"}, {"topic": "Section 1", "q": "A qualitative risk analysis technique involves:", "o": ["A) Using numerical probability and statistical data only", "B) Ranking risks based on expert judgment, experience, or categories like low/medium/high", "C) Using Monte Carlo simulations", "D) Deriving exact mathematical models of risk"], "a": "B) Ranking risks based on expert judgment, experience, or categories like low/medium/high"}, {"topic": "Section 1", "q": "In Dye Penetrant Testing (DPT), surface cracks are made visible by:", "o": ["A) Applying magnetic particles to the surface", "B) Using a fluorescent or colored liquid that seeps into surface defects", "C) Measuring electrical resistance", "D) Using X-rays to highlight the defect"], "a": "B) Using a fluorescent or colored liquid that seeps into surface defects"}, {"topic": "Section 1", "q": "The least count of an instrument is defined as:", "o": ["A) The highest value that can be measured", "B) The difference between two readings", "C) The smallest value that can be measured accurately by the instrument", "D) The ratio of error to accuracy"], "a": "C) The smallest value that can be measured accurately by the instrument"}, {"topic": "Section 1", "q": "The Economic Order Quantity (EOQ) is the order quantity that:", "o": ["A) Minimizes total ordering and holding costs", "B) Maximizes total inventory level", "C) Minimizes purchasing cost only", "D) Maximizes supplier discounts"], "a": "A) Minimizes total ordering and holding costs"}, {"topic": "Section 1", "q": "Knocking in spark ignition (SI) engines is primarily caused by:", "o": ["A) Late combustion of the air\u2013fuel mixture", "B) Spontaneous auto-ignition of the end-gas ahead of the flame front", "C) Use of high-octane fuel", "D) Low compression ratio"], "a": "B) Spontaneous auto-ignition of the end-gas ahead of the flame front"}, {"topic": "Section 1", "q": "Calibration of an instrument is done to:", "o": ["A) Adjust the instrument to read correctly within a specified accuracy range", "B) Increase the range of measurement", "C) Make the instrument lighter", "D) Eliminate the need for repeat measurements"], "a": "A) Adjust the instrument to read correctly within a specified accuracy range"}, {"topic": "Section 1", "q": "The rate of heat transfer by conduction through a plane wall is given by:", "o": ["A) Q=kA(T1\u2212T2)/L", "B) Q=hA(T1\u2212T2)", "C) Q=\u03c3AT4", "D) Q=mcp(T1\u2212T2)"], "a": "A) Q=kA(T1\u2212T2)/L"}, {"topic": "Section 1", "q": "The primary purpose of using fins on a heated surface is to:", "o": ["A) Reduce heat transfer from the surface", "B) Increase the heat transfer area and enhance the rate of heat dissipation", "C) Store thermal energy for later use", "D) Decrease the convective heat transfer coefficient"], "a": "B) Increase the heat transfer area and enhance the rate of heat dissipation"}, {"topic": "Section 1", "q": "In a fuel cell, the chemical energy of fuel is converted directly into:", "o": ["A) Heat energy", "B) Electrical energy", "C) Mechanical energy", "D) Sound energy"], "a": "B) Electrical energy"}, {"topic": "Section 1", "q": "The viscosity grade of lubricating oil (e.g., SAE 20W-40) indicates:", "o": ["A) The ignition quality of fuel", "B) The fuel economy of the engine", "C) The flow characteristics of oil at low and high temperatures", "D) The purity of the oil"], "a": "C) The flow characteristics of oil at low and high temperatures"}, {"topic": "Section 1", "q": "The Internal Rate of Return (IRR) is:", "o": ["A) The interest rate at which the NPV of all cash flows equals zero", "B) The rate of tax applied on income", "C) The rate at which future cash flows are discounted for inflation", "D) The fixed rate used by banks for all loans"], "a": "A) The interest rate at which the NPV of all cash flows equals zero"}, {"topic": "Section 1", "q": "An isometric projection is a type of pictorial drawing in which:", "o": ["A) All axes are at 45\u00b0 to each other", "B) Two axes are at 30\u00b0 to the horizontal and one is vertical", "C) Only one view is drawn without true dimensions", "D) All dimensions are reduced by half"], "a": "B) Two axes are at 30\u00b0 to the horizontal and one is vertical"}, {"topic": "Section 1", "q": "The Council (NEC) maintains a record of engineers under:", "o": ["A) maintains a record of engineers under:", "B) Only one category for all engineers", "C) Different categories based on qualifications and experience (e.g., Graduate Engineer, Professional Engineer)", "D) Only foreign engineers working in Nepal"], "a": "B) Different categories based on qualifications and experience (e.g., Graduate Engineer, Professional Engineer)"}];
+
+function getRandomQuestions(){
+    let shuffled = fullQuestions.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0,100);
+}
+
+var questions = getRandomQuestions();
+
+var current = 0;
+var answers = {};
+var visited = {};
+var marked = {};
+
+
+// TIMER
+var totalTime = 7200;
+
+function startTimer(){
+    var timer = setInterval(function(){
+        var h = Math.floor(totalTime/3600);
+        var m = Math.floor((totalTime%3600)/60);
+        var s = totalTime%60;
+
+        document.getElementById("timer").innerText =
+        h + ":" + (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+
+        totalTime--;
+
+        if(totalTime < 0){
+            clearInterval(timer);
+            submitExam(true);
+        }
+    },1000);
+}
+
+
+// PALETTE
+function buildPalette(){
+    var p="";
+    for(let i=0;i<questions.length;i++){
+        p+=`<button id="p${i}" class="default" onclick="go(${i})">${i+1}</button>`;
+    }
+    document.getElementById("palette").innerHTML = p;
+}
+
+function updatePalette(){
+    for(let i=0;i<questions.length;i++){
+        let btn = document.getElementById("p"+i);
+
+        if(marked[i]){
+            btn.className="marked";
+        }
+        else if(answers[i] !== undefined){
+            btn.className="answered";
+        }
+        else if(visited[i]){
+            btn.className="unanswered";
+        }
+        else{
+            btn.className="default";
+        }
+    }
+}
+
+
+// NAVIGATION
+function go(i){
+    current=i;
+    loadQuestion();
+}
+
+function loadQuestion(){
+
+    visited[current]=true;
+
+    var q = questions[current];
+    document.getElementById("question").innerHTML = (current+1)+". "+q.q;
+
+    var opts = "";
+    q.o.forEach(function(opt,i){
+        var checked = (answers[current] !== undefined && answers[current] === i) ? "checked" : "";
+
+        opts += `<label style="display:block;cursor:pointer;margin:8px 0;">
+        <input type="radio" name="opt" value="${i}" ${checked}> ${opt}
+        </label>`;
+    });
+
+    document.getElementById("options").innerHTML = opts;
+
+    document.querySelectorAll('input[name="opt"]').forEach(function(radio){
+        radio.addEventListener("change", function(){
+            answers[current] = parseInt(this.value);
+            if(marked[current]) delete marked[current];
+            updateCount();
+            updatePalette();
+        });
+    });
+
+    updateCount();
+    updatePalette();
+}
+
+function next(){
+    if(current<questions.length-1){
+        current++;
+        loadQuestion();
+    }
+}
+
+function prev(){
+    if(current>0){
+        current--;
+        loadQuestion();
+    }
+}
+
+function mark(){
+    marked[current]=true;
+    updatePalette();
+}
+
+
+// ATTEMPT COUNT
+function updateCount(){
+    document.getElementById("count").innerText = Object.keys(answers).length;
+}
+
+
+// SUBMIT
+function submitExam(auto=false){
+
+    if(!auto && Object.keys(visited).length < 100){
+        alert("Visit all questions before submitting!");
+        return;
+    }
+
+    let score = 0;
+    let attempted = 0;
+
+    var resultHTML = "<h2>Results</h2>";
+
+    questions.forEach(function(q,i){
+
+        let correct = q.a;
+        let userIndex = answers[i];
+        let user = userIndex !== undefined ? q.o[userIndex] : null;
+
+        if(user !== null) attempted++;
+
+        let isCorrect = false;
+
+        if(user && correct){
+            isCorrect = user.charAt(0) === correct.charAt(0);
+        }
+
+        if(isCorrect) score++;
+
+        resultHTML += `
+        <div>
+        <b>${i+1}. ${q.q}</b><br>
+
+        Your Answer: 
+        <span style="color:${user ? (isCorrect ? "green" : "red") : "black"}">
+        ${user ? user : "Not Attempted"}
+        </span><br>
+
+        Correct Answer: 
+        <span style="color:green">${correct}</span>
+        </div><br>`;
+    });
+
+    resultHTML =
+    `<h2>Results</h2>
+     <div style="text-align:center;font-size:34px;font-weight:bold;margin-bottom:10px;">
+     Score: ${score}/100
+     </div>
+     <div style="text-align:center;font-size:24px;margin-bottom:20px;">
+     Attempted: ${attempted}/100
+     </div>` + resultHTML;
+
+    document.getElementById("resultArea").innerHTML = resultHTML;
+    document.getElementById("resultArea").style.display="block";
+    document.getElementById("examArea").style.display="none";
+    document.getElementById("controls").style.display="none";
+    document.getElementById("palette").style.display="none";
+    document.getElementById("attemptBox").style.display="none";
+    document.getElementById("timer").style.display="none";
+}
+
+
+buildPalette();
+startTimer();
+loadQuestion();
+
+</script>
+
+</body>
+</html>
