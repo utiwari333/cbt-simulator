@@ -1,0 +1,328 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>NEC CBT Simulator</title>
+
+<style>
+body{font-family:Arial;margin:20px}
+
+/* Top bar for timer + attempt count */
+#topBar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:20px;
+margin-bottom:20px;
+padding:0 40px;
+}
+
+#timer{
+font-size:48px;
+}
+
+#attemptBox{
+font-size:24px;
+font-weight:bold;
+}
+
+.default{background:gray;color:white}
+.answered{background:green;color:white}
+.unanswered{background:red;color:white}
+.marked{background:yellow;color:black}
+
+#palette{
+margin-top:20px;
+margin-bottom:40px;
+text-align:center;
+}
+
+#palette button{
+    width:2vw;
+    height:2vw;
+    font-size:0.75vw;
+}
+
+#examArea{margin-top:20px;margin-bottom:120px;}
+
+#controls button{
+padding:18px 28px;
+font-size:20px;
+margin:8px;
+}
+
+#controls {
+position: fixed;
+bottom: 20px;
+left: 50%;
+transform: translateX(-50%);
+text-align:center;
+background:white;
+padding:10px;
+}
+
+h2{
+text-align:center;
+}
+
+h1{
+text-align:center;
+}
+
+
+#question{
+    font-size:28px;
+    font-weight:500;
+}
+
+#options{
+    font-size:22px;
+}
+
+#options label{
+    margin:10px 0;
+}
+
+#resultArea{
+    font-size:22px;
+    line-height:1.6;
+}
+
+#resultArea b{
+    font-size:24px;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>NEC Mechanical CBT Simulator</h2>
+<h1>Sample Questions by NEC</h1>
+
+<!-- ✅ FIX: Timer + Attempt count in same row -->
+<div id="topBar">
+    <div id="timer"></div>
+    <div id="attemptBox">
+        Attempted: <span id="count">0</span>/100
+    </div>
+</div>
+
+<div id="palette"></div>
+
+<div id="examArea">
+<div id="question"></div>
+<div id="options"></div>
+</div>
+
+<div id="controls">
+<button onclick="prev()">Previous</button>
+<button onclick="next()">Next</button>
+<button onclick="mark()">Mark Review</button>
+<button onclick="submitExam()">Submit</button>
+</div>
+
+<div id="resultArea" style="display:none"></div>
+
+<script>
+
+var fullQuestions = [{"topic": "Section 1", "q": "What does RFP stand for?", "o": ["A) Respect for purpose", "B) Respect for proposal", "C) Request for proposal", "D) Request for purpose"], "a": "C) Request for proposal"}, {"topic": "Section 1", "q": "What is the location of the center of pressure of a rectangular lamina which is immersed up to a height of \u2018h\u2019 under the water?", "o": ["A) h", "B) h/2", "C) 3h/2", "D) 2h/3"], "a": "B) h/2"}, {"topic": "Section 1", "q": "Diesel fuel is commonly rated by ________.", "o": ["A) calorific value", "B) cetane number", "C) octane number", "D) mileage"], "a": "B) cetane number"}, {"topic": "Section 1", "q": "CNG is a ________ fuel.", "o": ["A) solid", "B) liquid", "C) gaseous", "D) composite"], "a": "C) gaseous"}, {"topic": "Section 1", "q": "The mechanism of dry corrosion is _______.", "o": ["A) absorption", "B) diffusion", "C) electrochemical reaction", "D) dispersion"], "a": "B) diffusion"}, {"topic": "Section 1", "q": "Which of the following is associated with the product risk?", "o": ["A) Control of test item", "B) Negative consequences", "C) non-availability of test environment", "D) Test object"], "a": "B) Negative consequences"}, {"topic": "Section 1", "q": "The flow of highly viscous liquid with low velocity in a small diameter pipe must be _________.", "o": ["A) Laminar", "B) Turbulent", "C) Transition", "D) Can not be said"], "a": "A) Laminar"}, {"topic": "Section 1", "q": "Instantaneous center of a body rolling with sliding on a stationary curved surface lies_______.", "o": ["A) at the point of contact", "B) on the common normal at the point of contact", "C) on the common tangent at the point of contact", "D) at the center of curvature of the stationary surface"], "a": "B) on the common normal at the point of contact"}, {"topic": "Section 1", "q": "The change in internal energy in a polytropic process is given by,", "o": ["A) m*Cv*dT", "B) m*Cp*dT", "C) m*Cv ln (T2/T1)", "D) m*Cp ln (T2/T1)"], "a": "A) m*Cv*dT"}, {"topic": "Section 1", "q": "The efficiency of heat engine is the ratio of _______ and heat added.", "o": ["A) heat removed", "B) heat added + heat removed", "C) heat added \u2013 heat removed", "D) heat loss due to irreversibility"], "a": "C) heat added \u2013 heat removed"}, {"topic": "Section 1", "q": "What process is used for joining sheet metals?", "o": ["A) Hemming", "B) Flanking", "C) Perforating", "D) Seaming"], "a": "D) Seaming"}, {"topic": "Section 1", "q": "The forging hammer is also known as ________.", "o": ["A) stress-restricted machine", "B) energy-restricted machine", "C) load-restricted machine", "D) form-restricted machine"], "a": "B) energy-restricted machine"}, {"topic": "Section 1", "q": "What is the torsional constant of an elliptical cross-section with major axis 2a and minor axis 2b?", "o": ["A) \u03c0a\u00b2b\u00b2/(a\u00b2+b\u00b2)", "B) \u03c0a\u00b2b\u00b2/(a\u00b2-b\u00b2)", "C) \u03c0a\u00b3b\u00b3/(a\u00b2+b\u00b2)", "D) \u03c0a\u00b3b\u00b3/(a\u00b2-b\u00b2)"], "a": "A) \u03c0a\u00b2b\u00b2/(a\u00b2+b\u00b2)"}, {"topic": "Section 1", "q": "Which of the following province has highest number of registered academic engineering institutions as of 2081?", "o": ["A) Gandaki", "B) Bagmati", "C) Karnali", "D) Koshi"], "a": "B) Bagmati"}, {"topic": "Section 1", "q": "Which turbine is suitable for head up to 25m ?", "o": ["A) Francis", "B) Pelton", "C) Turgo", "D) Kaplan"], "a": "D) Kaplan"}, {"topic": "Section 1", "q": "What is the range of capacity of Pico hydropower plant?", "o": ["A) 0-10 KW", "B) 10-30 KW", "C) 30-100 KW", "D) 100-500 KW"], "a": "A) 0-10 KW"}, {"topic": "Section 1", "q": "Which is not necessary in an SI engine?", "o": ["A) Carburetor", "B) Spark plug", "C) Fuel injector", "D) Ignition coil"], "a": "C) Fuel injector"}, {"topic": "Section 1", "q": "Pressure and temperature are _________ variables.", "o": ["A) path", "B) state", "C) extensive", "D) fixed"], "a": "B) state"}, {"topic": "Section 1", "q": "Which phase transition reaction involves the transformation of single-phase liquid into two phases of solids?", "o": ["A) Eutectic", "B) Eutectoid", "C) Peritectic", "D) Peritectoid"], "a": "A) Eutectic"}, {"topic": "Section 1", "q": "In drawing, roughness is indicated by ______.", "o": ["A) circle", "B) curve", "C) straight line", "D) inverted triangle"], "a": "D) inverted triangle"}, {"topic": "Section 1", "q": "Motivation is the process of stimulating people towards ________.", "o": ["A) homework", "B) assignments", "C) desired goals", "D) homework and assignments"], "a": "C) desired goals"}, {"topic": "Section 1", "q": "Which of the following boilers can produce steam at significantly higher pressure than the other three?", "o": ["A) Locomotive boiler", "B) Babcock and Wilcox boiler", "C) Lancashire boiler", "D) Cochran boiler"], "a": "B) Babcock and Wilcox boiler"}, {"topic": "Section 1", "q": "In pumps, the energy transformation occurs from ______ to ______.", "o": ["A) water, rotor", "B) rotor, water", "C) water, draft", "D) draft, rotor"], "a": "B) rotor, water"}, {"topic": "Section 1", "q": "In a laminar flow through circular pipe, what is the relation between the maximum velocity (Vm) and the average velocity (Va)?", "o": ["A) Vm = 2Va", "B) Vm = 3Va", "C) Vm = (3/2)Va", "D) Vm = (4/3)Va"], "a": "A) Vm = 2Va"}, {"topic": "Section 1", "q": "Which of the following is not a CAD software ?", "o": ["A) Solidworks", "B) AutoCAD", "C) MSC Nastran", "D) Pro E"], "a": "C) MSC Nastran"}, {"topic": "Section 1", "q": "Which of the following is not used as a safety device?", "o": ["A) safety interlock", "B) lock safe", "C) emergency switch", "D) lock nut"], "a": "D) lock nut"}, {"topic": "Section 1", "q": "Gearing, backlash, friction between moving parts, and scale accuracies are generally known as _______.", "o": ["A) instrument error", "B) interference error", "C) calibration error", "D) interaction error"], "a": "A) instrument error"}, {"topic": "Section 1", "q": "Which of the following is not a line standard?", "o": ["A) Yard", "B) Meter", "C) Precision scale", "D) Length bar"], "a": "C) Precision scale"}, {"topic": "Section 1", "q": "Failure of bearings is commonly due to ______.", "o": ["A) proper mounting", "B) improper lubrication", "C) axial loading", "D) insufficient speed"], "a": "B) improper lubrication"}, {"topic": "Section 1", "q": "Which of the following is not an NDT?", "o": ["A) Ultrasonic testing", "B) Dye penetration testing", "C) Compression testing", "D) Radiography testing"], "a": "C) Compression testing"}, {"topic": "Section 1", "q": "In fault tree analysis, what is the primary event?", "o": ["A) event at the top", "B) event which can be further developed", "C) event which cannot be further developed", "D) external event"], "a": "C) event which cannot be further developed"}, {"topic": "Section 1", "q": "Which of the following is a zero-order instrument?", "o": ["A) thermometer", "B) potentiometer", "C) thermocouple", "D) seismometer"], "a": "A) thermometer"}, {"topic": "Section 1", "q": "Which of the following is the correct relationship among reflectivity (r), transmissivity (t), and absorptivity (a) for a black body?", "o": ["A) r + t = 0", "B) a = 1", "C) r = 0", "D) all of the above"], "a": "D) all of the above"}, {"topic": "Section 1", "q": "Which is not true for (A/F, 6%, 7) in engineering economics?", "o": ["A) calculating F when A is given", "B) calculating A when F is given", "C) 6% is the rate", "D) 7 refers to time"], "a": "B) calculating A when F is given"}, {"topic": "Section 1", "q": "Which process is done to relieve residual stress and soften metal?", "o": ["A) tempering", "B) full annealing", "C) process annealing", "D) normalizing"], "a": "B) full annealing"}, {"topic": "Section 1", "q": "The torsional shear stress in a circular shaft varies ______ with distance from axis.", "o": ["A) linearly", "B) sinusoidally", "C) exponentially", "D) parabolically"], "a": "A) linearly"}, {"topic": "Section 1", "q": "Which of the following is an inversion of 2R-2P mechanism?", "o": ["A) single slider crank", "B) Whitworth mechanism", "C) oscillating cylinder", "D) scotch yoke"], "a": "D) scotch yoke"}, {"topic": "Section 1", "q": "What is the range of Poisson\u2019s ratio?", "o": ["A) 0 to 0.5", "B) -0.5 to 0.5", "C) -1 to 1.5", "D) -0.5 to 1"], "a": "A) 0 to 0.5"}, {"topic": "Section 1", "q": "ISO 9000 series is related to", "o": ["A) safety", "B) environment", "C) quality", "D) emissions"], "a": "C) quality"}, {"topic": "Section 1", "q": "Which of the following is not renewable energy?", "o": ["A) Wind", "B) Nuclear", "C) Solar", "D) Biomass"], "a": "B) Nuclear"}, {"topic": "Section 1", "q": "What is the color of exhaust smoke when lubricant burns?", "o": ["A) black", "B) white", "C) brown", "D) bluish grey"], "a": "D) bluish grey"}, {"topic": "Section 1", "q": "Which plant layout is used for batch production?", "o": ["A) Product", "B) Functional", "C) Job", "D) Combined"], "a": "B) Functional"}, {"topic": "Section 1", "q": "Which device measures lowest pressure?", "o": ["A) McLeod", "B) Thermal conductivity", "C) Pirani", "D) Ionization"], "a": "D) Ionization"}, {"topic": "Section 1", "q": "Dimensional formula of kinematic viscosity", "o": ["A) M\u00b2LT\u207b\u00b9", "B) MLT", "C) L\u00b2T\u207b\u00b9", "D) LT\u207b\u00b2"], "a": "C) L\u00b2T\u207b\u00b9"}, {"topic": "Section 1", "q": "Who appoints NEC chairman?", "o": ["A) Government of Nepal", "B) NEC committee", "C) NEC members", "D) Engineers"], "a": "A) Government of Nepal"}, {"topic": "Section 1", "q": "What is not effective against corrosion?", "o": ["A) Electroplating", "B) Metal plating", "C) Color painting", "D) Enameling"], "a": "C) Color painting"}, {"topic": "Section 1", "q": "Machine code M06 refers to", "o": ["A) Tool stop", "B) Tool change", "C) Coolant off", "D) Coolant on"], "a": "B) Tool change"}, {"topic": "Section 1", "q": "Work done in slanted vs vertical drop", "o": ["A) Less", "B) More", "C) Zero", "D) Equal"], "a": "D) Equal"}, {"topic": "Section 1", "q": "Maintenance with routine inspection", "o": ["A) Predictive", "B) Breakdown", "C) Periodic", "D) Preventive"], "a": "D) Preventive"}, {"topic": "Section 1", "q": "Military organization is example of", "o": ["A) Functional", "B) Line", "C) Line and staff", "D) Staff"], "a": "B) Line"}, {"topic": "Section 1", "q": "The term \u201ccost down\u201d refers to", "o": ["A) Sales cost", "B) Production cost", "C) Wages and salary", "D) Reducing cost"], "a": "D) Reducing cost"}, {"topic": "Section 1", "q": "Which of the following is true for phase change of saturated liquid to vapor?", "o": ["A) P > PSat and T > Tsat", "B) Psat > P and Tsat > T", "C) P > Psat and T < Tsat", "D) P < Psat and T > Tsat"], "a": "D) P < Psat and T > Tsat"}, {"topic": "Section 1", "q": "Which type of working process is used for producing containers (like plastic jars)?", "o": ["A) Extrusion", "B) Blow Moulding", "C) Die casting", "D) Rolling"], "a": "B) Blow Moulding"}, {"topic": "Section 1", "q": "Which type of working process produces better finish in materials ?", "o": ["A) Direct extrusion", "B) Indirect extrusion", "C) Rolling", "D) None"], "a": "B) Indirect extrusion"}, {"topic": "Section 1", "q": "Which is not a liquid lubricant?", "o": ["A) Palm oil", "B) Grease", "C) Mustard oil", "D) Vegetable oil"], "a": "B) Grease"}, {"topic": "Section 1", "q": "What is used to represent the quality of grinding wheel?", "o": ["A) Vickers hardness number", "B) Brinell hardness number", "C) Rockwell hardness number", "D) Letter of alphabets"], "a": "D) Letter of alphabets"}, {"topic": "Section 1", "q": "How does the ionic crystal fracture?", "o": ["A) Creep type", "B) Fatigue type", "C) Shear type", "D) Brittle type"], "a": "D) Brittle type"}, {"topic": "Section 1", "q": "If N2 is greater than N1, what would be the action of transformer?", "o": ["A) Step up", "B) Step down", "C) Same voltage", "D) Does not depend"], "a": "A) Step up"}, {"topic": "Section 1", "q": "Oscillator is different from amplifier in a way that", "o": ["A) it has more gain", "B) it requires dc input", "C) it has less gain", "D) it does not require input"], "a": "D) it does not require input"}, {"topic": "Section 1", "q": "The time between ordering and receiving of the order is called _______.", "o": ["A) storing time", "B) lead time", "C) material handling time", "D) order time"], "a": "B) lead time"}, {"topic": "Section 1", "q": "What does CAR stand for?", "o": ["A) Consultant\u2019s all risk", "B) Contract all risk", "C) Contractor\u2019s all risk", "D) none"], "a": "C) Contractor\u2019s all risk"}, {"topic": "Section 1", "q": "Which of the following best defines ethics?", "o": ["A) Rightness and wrongness in profession", "B) Moral values of society", "C) Individual goals", "D) None of the above"], "a": "A) Rightness and wrongness in profession"}, {"topic": "Section 1", "q": "Which of the following is the correct relation for natural frequency?", "o": ["A) wn2= k/m", "B) wn = k/m", "C) wn = (k/m)2", "D) wn2 = m/k"], "a": "A) wn2= k/m"}, {"topic": "Section 1", "q": "What is used to calibrate a slip gauge?", "o": ["A) Slip base", "B) Interferometer", "C) Vernier caliper", "D) Micrometer"], "a": "B) Interferometer"}, {"topic": "Section 1", "q": "What is the primary objective of network analysis?", "o": ["A) To maximize the project duration", "B) To minimize the project duration", "C) To reduce delays", "D) To increase the efficiency"], "a": "B) To minimize the project duration"}, {"topic": "Section 1", "q": "Gnatt charts are used for______.", "o": ["A) production schedule", "B) scheduling and routing", "C) production control", "D) quality inspection"], "a": "A) production schedule"}, {"topic": "Section 1", "q": "Which solid waste has the highest chance of causing diseases like hepatitis B and C?", "o": ["A) Industrial waste", "B) Kitchen waste", "C) Biomedical waste", "D) Agricultural waste"], "a": "C) Biomedical waste"}, {"topic": "Section 1", "q": "The air requirement of a petrol engine during starting is ________compared to the theoretical air required for complete combustion.", "o": ["A) more", "B) less", "C) same as", "D) dependent on the specific type of engine"], "a": "B) less"}, {"topic": "Section 1", "q": "R.R. Moore\u2019s rotating beam fatigue test machine gives the value of", "o": ["A) Se", "B) 0.5Se", "C) Se\u2019", "D) 0.5Se\u2019"], "a": "C) Se\u2019"}, {"topic": "Section 1", "q": "Which of the following angles cannot be measured by the combination of set squares?", "o": ["A) 30o", "B) 45o", "C) 15o", "D) 20o"], "a": "D) 20o"}, {"topic": "Section 1", "q": "Which instrument is used to amplify the difference between the signals?", "o": ["A) operational amplifier", "B) differential amplifier", "C) transistor", "D) rectifier"], "a": "B) differential amplifier"}, {"topic": "Section 1", "q": "What is the unit of thermal conductivity?", "o": ["A) W/m2k", "B) W/mk2", "C) Wmk", "D) W/mk"], "a": "D) W/mk"}, {"topic": "Section 1", "q": "Which is the most economical shape for a cantilever beam carrying UDL?", "o": ["A) rectangular beam", "B) I beam", "C) square beam", "D) circular beam"], "a": "B) I beam"}, {"topic": "Section 1", "q": "Which principle is associated with gauge design?", "o": ["A) Rankine principle", "B) Lagrange principle", "C) Taylor principle", "D) Watt principle"], "a": "C) Taylor principle"}, {"topic": "Section 1", "q": "What is used to measure the inclination of a surface?", "o": ["A) Collimator", "B) Slip gauge", "C) Micrometer", "D) Vernier caliper"], "a": "A) Collimator"}, {"topic": "Section 1", "q": "Eddy current is used to measure:", "o": ["A) Defects", "B) Smoothness", "C) Dimensions", "D) None"], "a": "A) Defects"}, {"topic": "Section 1", "q": "Who was the first to describe the term 'boundary layer'?", "o": ["A) Reynold", "B) Prandtl", "C) Newton", "D) Lagrange"], "a": "B) Prandtl"}, {"topic": "Section 1", "q": "The expansion process in the Rankine cycle is:", "o": ["A) Isentropic", "B) Isobaric", "C) Isochoric", "D) Isothermal"], "a": "A) Isentropic"}, {"topic": "Section 1", "q": "The diameter of the shank of the rivet depends upon:", "o": ["A) Thickness", "B) Yield strength", "C) Length", "D) None"], "a": "A) Thickness"}, {"topic": "Section 1", "q": "The longitudinal strain of the fiber depends upon:", "o": ["A) Strength of fiber", "B) Orientation of fiber", "C) Diameter of fiber", "D) None"], "a": "B) Orientation of fiber"}, {"topic": "Section 1", "q": "The boiling temperature of water is:", "o": ["A) 312\u00b0F", "B) 212\u00b0F", "C) 150\u00b0F", "D) 320\u00b0F"], "a": "B) 212\u00b0F"}, {"topic": "Section 1", "q": "One horsepower is equal to:", "o": ["A) 75 watt", "B) 102 watt", "C) 550 watt", "D) 746 watt"], "a": "D) 746 watt"}, {"topic": "Section 1", "q": "The heat treatment process for already hardened steel to soften it is:", "o": ["A) Full annealing", "B) Annealing", "C) Normalizing", "D) Quenching"], "a": "B) Annealing"}, {"topic": "Section 1", "q": "Conversion of fuel energy directly into mechanical energy is done by:", "o": ["A) Fuel cell", "B) Ni-Cd cell", "C) Solar cell", "D) Electrolytic cell"], "a": "A) Fuel cell"}, {"topic": "Section 1", "q": "Which of the following takes heat energy and converts it into mechanical work in a cycle?", "o": ["A) Heat pump", "B) Heat engine", "C) Refrigeration", "D) Generator"], "a": "B) Heat engine"}, {"topic": "Section 1", "q": "Degree of freedom for a mechanism with 8 links and 9 revolute pairs is:", "o": ["A) 1", "B) 2", "C) 3", "D) 4"], "a": "C) 3"}, {"topic": "Section 1", "q": "Which of the risks is associated with a software company?", "o": ["A) Technology risk", "B) Organizational risk", "C) Environmental risk", "D) None"], "a": "A) Technology risk"}, {"topic": "Section 1", "q": "Heat flux is given by:", "o": ["A) q = Q/A", "B) q = A/Q", "C) q = A * Q", "D) q = A * Q\u00b2"], "a": "A) q = Q/A"}, {"topic": "Section 1", "q": "Which of the following is not done by a fuel injector?", "o": ["A) Control the speed of the engine", "B) Atomize the fuel", "C) Inject the fuel", "D) Filter the fuel"], "a": "D) Filter the fuel"}, {"topic": "Section 1", "q": "The maximum operating pressure for a free circulation boiler is:", "o": ["A) 500 bar", "B) 300 bar", "C) 400 bar", "D) 150 bar"], "a": "D) 150 bar"}, {"topic": "Section 1", "q": "Top-down analysis in hazard analysis is:", "o": ["A) FTA (Fault Tree Analysis)", "B) FMEA (Failure Mode and Effects Analysis)", "C) Fishbone diagram", "D) Bath tube diagram"], "a": "A) FTA (Fault Tree Analysis)"}, {"topic": "Section 1", "q": "Which gear is used for intersecting shafts?", "o": ["A) Bevel gear", "B) Spur gear", "C) Helical gear", "D) Worm gear"], "a": "A) Bevel gear"}, {"topic": "Section 1", "q": "Which type of cantilever beam provides more economic loading?", "o": ["A) rectangular beam", "B) I-section beam", "C) Circular beam", "D) None"], "a": "B) I-section beam"}, {"topic": "Section 1", "q": "How can we join two sheet metals?", "o": ["A) Bending", "B) Seaming", "C) Welding", "D) Rolling"], "a": "B) Seaming"}, {"topic": "Section 1", "q": "What is called the temperature where the ignition of a substance starts?", "o": ["A) Ignition point", "B) Flash point", "C) Fire point", "D) Boiling point"], "a": "A) Ignition point"}, {"topic": "Section 1", "q": "Fourier equation is:", "o": ["A) Q' = -kAdx/dt", "B) Q' = -kAdt/dx", "C) Q' = -kA dx\u00b2/dt", "D) Q' = -kax"], "a": "B) Q' = -kAdt/dx"}, {"topic": "Section 1", "q": "Which type of maintenance is carried out before failure occurs?", "o": ["A) Breakdown maintenance", "B) Preventive maintenance", "C) Corrective maintenance", "D) Predictive maintenance"], "a": "B) Preventive maintenance"}, {"topic": "Section 1", "q": "Which law states that heat flows from a hot body to a cold body?", "o": ["A) Zeroth law", "B) First law", "C) Second law", "D) Third law"], "a": "C) Second law"}, {"topic": "Section 1", "q": "Which property measures resistance to deformation?", "o": ["A) Toughness", "B) Hardness", "C) Elasticity", "D) Plasticity"], "a": "C) Elasticity"}, {"topic": "Section 1", "q": "Which instrument is used to measure pressure?", "o": ["A) Thermometer", "B) Manometer", "C) Hygrometer", "D) Barometer"], "a": "B) Manometer"}, {"topic": "Section 1", "q": "Which device converts mechanical energy into electrical energy?", "o": ["A) Motor", "B) Generator", "C) Turbine", "D) Compressor"], "a": "B) Generator"}, {"topic": "Section 1", "q": "Which of the following is not a renewable energy source?", "o": ["A) Solar", "B) Wind", "C) Coal", "D) Biomass"], "a": "C) Coal"}, {"topic": "Section 1", "q": "Which type of gear is used for parallel shafts?", "o": ["A) Bevel gear", "B) Worm gear", "C) Spur gear", "D) Helical gear"], "a": "C) Spur gear"}, {"topic": "Section 1", "q": "Which material has highest thermal conductivity?", "o": ["A) Wood", "B) Copper", "C) Glass", "D) Plastic"], "a": "B) Copper"}, {"topic": "Section 1", "q": "Which process is used to remove metal by electrolysis?", "o": ["A) ECM", "B) EDM", "C) Milling", "D) Grinding"], "a": "A) ECM"}, {"topic": "Section 1", "q": "Which of the following is not a casting defect?", "o": ["A) Blow holes", "B) Shrinkage", "C) Porosity", "D) Hardness"], "a": "D) Hardness"}, {"topic": "Section 1", "q": "Which cycle is used in petrol engines?", "o": ["A) Otto cycle", "B) Diesel cycle", "C) Brayton cycle", "D) Rankine cycle"], "a": "A) Otto cycle"}, {"topic": "Section 1", "q": "Which cycle is used in diesel engines?", "o": ["A) Otto cycle", "B) Diesel cycle", "C) Rankine cycle", "D) Carnot cycle"], "a": "B) Diesel cycle"}, {"topic": "Section 1", "q": "Which law is used in heat conduction?", "o": ["A) Newton\u2019s law", "B) Fourier\u2019s law", "C) Boyle\u2019s law", "D) Hooke\u2019s law"], "a": "B) Fourier\u2019s law"}, {"topic": "Section 1", "q": "Which instrument measures temperature?", "o": ["A) Barometer", "B) Thermometer", "C) Hygrometer", "D) Anemometer"], "a": "B) Thermometer"}, {"topic": "Section 1", "q": "Which device is used to measure speed of air?", "o": ["A) Thermometer", "B) Hygrometer", "C) Anemometer", "D) Barometer"], "a": "C) Anemometer"}, {"topic": "Section 1", "q": "Which fluid property affects laminar flow?", "o": ["A) Density", "B) Viscosity", "C) Pressure", "D) Velocity"], "a": "B) Viscosity"}, {"topic": "Section 1", "q": "Which process increases hardness of steel?", "o": ["A) Annealing", "B) Normalizing", "C) Quenching", "D) Tempering"], "a": "C) Quenching"}, {"topic": "Section 1", "q": "Which of the following is not a type of welding?", "o": ["A) Arc welding", "B) Gas welding", "C) Resistance welding", "D) Casting"], "a": "D) Casting"}, {"topic": "Section 1", "q": "Which stress acts perpendicular to surface?", "o": ["A) Shear stress", "B) Normal stress", "C) Bending stress", "D) Torsional stress"], "a": "B) Normal stress"}, {"topic": "Section 1", "q": "Which machine converts heat energy into mechanical energy?", "o": ["A) Pump", "B) Engine", "C) Compressor", "D) Turbine"], "a": "B) Engine"}, {"topic": "Section 1", "q": "Which law relates stress and strain?", "o": ["A) Boyle\u2019s law", "B) Hooke\u2019s law", "C) Newton\u2019s law", "D) Ohm\u2019s law"], "a": "B) Hooke\u2019s law"}, {"topic": "Section 1", "q": "Which of the following is not a simple machine?", "o": ["A) Lever", "B) Pulley", "C) Screw", "D) Engine"], "a": "D) Engine"}, {"topic": "Section 1", "q": "Which property indicates ability to absorb energy?", "o": ["A) Hardness", "B) Toughness", "C) Strength", "D) Elasticity"], "a": "B) Toughness"}, {"topic": "Section 1", "q": "Which device increases pressure of gas?", "o": ["A) Turbine", "B) Compressor", "C) Pump", "D) Engine"], "a": "B) Compressor"}, {"topic": "Section 1", "q": "Which property resists scratching?", "o": ["A) Toughness", "B) Hardness", "C) Strength", "D) Elasticity"], "a": "B) Hardness"}, {"topic": "Section 1", "q": "Which material is best conductor of electricity?", "o": ["A) Copper", "B) Rubber", "C) Wood", "D) Plastic"], "a": "A) Copper"}, {"topic": "Section 1", "q": "Which of the following is not a fluid?", "o": ["A) Air", "B) Water", "C) Oil", "D) Sand"], "a": "D) Sand"}, {"topic": "Section 1", "q": "Which instrument measures humidity?", "o": ["A) Thermometer", "B) Hygrometer", "C) Barometer", "D) Anemometer"], "a": "B) Hygrometer"}, {"topic": "Section 1", "q": "Which device converts electrical energy into mechanical energy?", "o": ["A) Generator", "B) Motor", "C) Turbine", "D) Compressor"], "a": "B) Motor"}, {"topic": "Section 1", "q": "Which law governs fluid motion?", "o": ["A) Newton\u2019s law", "B) Bernoulli\u2019s law", "C) Hooke\u2019s law", "D) Ohm\u2019s law"], "a": "B) Bernoulli\u2019s law"}, {"topic": "Section 1", "q": "Which of the following is not a type of turbine?", "o": ["A) Pelton", "B) Francis", "C) Kaplan", "D) Diesel"], "a": "D) Diesel"}, {"topic": "Section 1", "q": "Which device is used to measure force?", "o": ["A) Thermometer", "B) Dynamometer", "C) Hygrometer", "D) Barometer"], "a": "B) Dynamometer"}, {"topic": "Section 1", "q": "Which process is used for cutting metals?", "o": ["A) Welding", "B) Machining", "C) Casting", "D) Forging"], "a": "B) Machining"}, {"topic": "Section 1", "q": "Which property indicates resistance to wear?", "o": ["A) Toughness", "B) Hardness", "C) Elasticity", "D) Plasticity"], "a": "B) Hardness"}, {"topic": "Section 1", "q": "Which law is used in fluid statics?", "o": ["A) Pascal\u2019s law", "B) Hooke\u2019s law", "C) Ohm\u2019s law", "D) Newton\u2019s law"], "a": "A) Pascal\u2019s law"}, {"topic": "Section 1", "q": "Which process joins metals permanently?", "o": ["A) Welding", "B) Bolting", "C) Riveting", "D) Screwing"], "a": "A) Welding"}, {"topic": "Section 1", "q": "Which of the following is not a heat transfer mode?", "o": ["A) Conduction", "B) Convection", "C) Radiation", "D) Reflection"], "a": "D) Reflection"}, {"topic": "Section 1", "q": "Which material is used for insulation?", "o": ["A) Copper", "B) Aluminum", "C) Rubber", "D) Steel"], "a": "C) Rubber"}, {"topic": "Section 1", "q": "Which law relates pressure and volume?", "o": ["A) Boyle\u2019s law", "B) Charles law", "C) Newton law", "D) Hooke\u2019s law"], "a": "A) Boyle\u2019s law"}, {"topic": "Section 1", "q": "Which device measures atmospheric pressure?", "o": ["A) Barometer", "B) Thermometer", "C) Hygrometer", "D) Anemometer"], "a": "A) Barometer"}, {"topic": "Section 1", "q": "Which process shapes metal by compressive force?", "o": ["A) Casting", "B) Forging", "C) Welding", "D) Machining"], "a": "B) Forging"}, {"topic": "Section 1", "q": "Which cycle is most efficient?", "o": ["A) Otto", "B) Diesel", "C) Carnot", "D) Rankine"], "a": "C) Carnot"}, {"topic": "Section 1", "q": "Which device stores energy?", "o": ["A) Battery", "B) Motor", "C) Generator", "D) Turbine"], "a": "A) Battery"}, {"topic": "Section 1", "q": "Which instrument measures speed of rotation?", "o": ["A) Thermometer", "B) Tachometer", "C) Barometer", "D) Hygrometer"], "a": "B) Tachometer"}, {"topic": "Section 1", "q": "Which fluid is incompressible?", "o": ["A) Air", "B) Gas", "C) Water", "D) Steam"], "a": "C) Water"}, {"topic": "Section 1", "q": "Which device is used to lift water?", "o": ["A) Turbine", "B) Pump", "C) Compressor", "D) Engine"], "a": "B) Pump"}];
+
+function getRandomQuestions(){
+    let shuffled = fullQuestions.sort(() => 0.5 - Math.random());
+    return shuffled.slice(0,100);
+}
+
+var questions = getRandomQuestions();
+
+var current = 0;
+var answers = {};
+var visited = {};
+var marked = {};
+
+
+// TIMER
+var totalTime = 7200;
+
+function startTimer(){
+    var timer = setInterval(function(){
+        var h = Math.floor(totalTime/3600);
+        var m = Math.floor((totalTime%3600)/60);
+        var s = totalTime%60;
+
+        document.getElementById("timer").innerText =
+        h + ":" + (m<10?"0"+m:m) + ":" + (s<10?"0"+s:s);
+
+        totalTime--;
+
+        if(totalTime < 0){
+            clearInterval(timer);
+            submitExam(true);
+        }
+    },1000);
+}
+
+
+// PALETTE
+function buildPalette(){
+    var p="";
+    for(let i=0;i<questions.length;i++){
+        p+=`<button id="p${i}" class="default" onclick="go(${i})">${i+1}</button>`;
+    }
+    document.getElementById("palette").innerHTML = p;
+}
+
+function updatePalette(){
+    for(let i=0;i<questions.length;i++){
+        let btn = document.getElementById("p"+i);
+
+        if(marked[i]){
+            btn.className="marked";
+        }
+        else if(answers[i] !== undefined){
+            btn.className="answered";
+        }
+        else if(visited[i]){
+            btn.className="unanswered";
+        }
+        else{
+            btn.className="default";
+        }
+    }
+}
+
+
+// NAVIGATION
+function go(i){
+    current=i;
+    loadQuestion();
+}
+
+function loadQuestion(){
+
+    visited[current]=true;
+
+    var q = questions[current];
+    document.getElementById("question").innerHTML = (current+1)+". "+q.q;
+
+    var opts = "";
+    q.o.forEach(function(opt,i){
+        var checked = (answers[current] !== undefined && answers[current] === i) ? "checked" : "";
+
+        opts += `<label style="display:block;cursor:pointer;margin:8px 0;">
+        <input type="radio" name="opt" value="${i}" ${checked}> ${opt}
+        </label>`;
+    });
+
+    document.getElementById("options").innerHTML = opts;
+
+    document.querySelectorAll('input[name="opt"]').forEach(function(radio){
+        radio.addEventListener("change", function(){
+            answers[current] = parseInt(this.value);
+            if(marked[current]) delete marked[current];
+            updateCount();
+            updatePalette();
+        });
+    });
+
+    updateCount();
+    updatePalette();
+}
+
+function next(){
+    if(current<questions.length-1){
+        current++;
+        loadQuestion();
+    }
+}
+
+function prev(){
+    if(current>0){
+        current--;
+        loadQuestion();
+    }
+}
+
+function mark(){
+    marked[current]=true;
+    updatePalette();
+}
+
+
+// ATTEMPT COUNT
+function updateCount(){
+    document.getElementById("count").innerText = Object.keys(answers).length;
+}
+
+
+// SUBMIT
+function submitExam(auto=false){
+
+    if(!auto && Object.keys(visited).length < 100){
+        alert("Visit all questions before submitting!");
+        return;
+    }
+
+    let score = 0;
+    let attempted = 0;
+
+    var resultHTML = "<h2>Results</h2>";
+
+    questions.forEach(function(q,i){
+
+        let correct = q.a;
+        let userIndex = answers[i];
+        let user = userIndex !== undefined ? q.o[userIndex] : null;
+
+        if(user !== null) attempted++;
+
+        let isCorrect = false;
+
+        if(user && correct){
+            isCorrect = user.charAt(0) === correct.charAt(0);
+        }
+
+        if(isCorrect) score++;
+
+        resultHTML += `
+        <div>
+        <b>${i+1}. ${q.q}</b><br>
+
+        Your Answer: 
+        <span style="color:${user ? (isCorrect ? "green" : "red") : "black"}">
+        ${user ? user : "Not Attempted"}
+        </span><br>
+
+        Correct Answer: 
+        <span style="color:green">${correct}</span>
+        </div><br>`;
+    });
+
+    resultHTML =
+    `<h2>Results</h2>
+     <div style="text-align:center;font-size:34px;font-weight:bold;margin-bottom:10px;">
+     Score: ${score}/100
+     </div>
+     <div style="text-align:center;font-size:24px;margin-bottom:20px;">
+     Attempted: ${attempted}/100
+     </div>` + resultHTML;
+
+    document.getElementById("resultArea").innerHTML = resultHTML;
+    document.getElementById("resultArea").style.display="block";
+    document.getElementById("examArea").style.display="none";
+    document.getElementById("controls").style.display="none";
+    document.getElementById("palette").style.display="none";
+    document.getElementById("attemptBox").style.display="none";
+    document.getElementById("timer").style.display="none";
+}
+
+
+buildPalette();
+startTimer();
+loadQuestion();
+
+</script>
+
+</body>
+</html>
